@@ -1,0 +1,155 @@
+from selenium import webdriver
+import undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from datetime import datetime, timedelta
+
+
+class ColumnExam:
+    def __init__(self):
+        self.environment = "pt"
+        self.start_date = (datetime.today() - timedelta(days=1)).strftime('%m-%d-%Y')
+        self.username = ""
+        self.password = ""
+        self.status_list = []
+        self.status_value_list = []
+        self.cr_list = []
+        self.cr_value_list = []
+        self.record_list = []
+        self.column_status = "Cr status"
+        self.column_cr = "Correspondence type"
+        self.current_date = datetime.today().strftime('%m-%d-%Y')
+        self.driver = uc.Chrome()
+
+    def column_exam_run(self):
+        self.initiate()
+        self.login()
+        self.select_date()
+        self.status_selection()
+        self.cr_selection()
+        self.status_evaluate()
+        self.conn_end()
+
+    def initiate(self):
+        self.driver
+        print("Connection confirmed!")
+
+    def login(self):
+        if self.environment == "qa":
+            self.driver.get('QA Link')
+        elif self.environment == "pt":
+            self.driver.get('PT Link')
+        else:
+            print("environment is improperly defined")
+        self.driver.find_element(By.ID, "id_username").send_keys(self.username)
+        self.driver.find_element(By.ID, "id_password").send_keys(self.password)
+        self.driver.find_element(By.XPATH, "//input[@type='submit']").click()
+        print(self.environment + " successfully accessed")
+
+    def select_date(self):
+        # Next selection chooses date start and end time before selecting
+        # find the start and end date inputs
+        start_date_input = self.driver.find_element(By.ID, 'id_start_date')
+        end_date_input = self.driver.find_element(By.ID, 'id_end_date')
+
+        # set the values and select to run for RDI names
+        start_date_input.clear()
+        start_date_input.send_keys(self.start_date)
+        end_date_input.clear()
+        end_date_input.send_keys(self.current_date)
+        self.driver.find_element(By.XPATH, "//button[@name='_get']").click()
+        print("date successfully selected and searched")
+
+    def status_selection(self):
+        content = self.driver.find_element(By.ID, "id_cr_status")
+        for item in content.find_elements(By.TAG_NAME, 'option'):
+            value = item.get_attribute("value")
+            if value != "None":
+                self.status_list.append(value)
+        print("status list built" + "\n" + str(self.status_list))
+
+    def cr_selection(self):
+        content = self.driver.find_element(By.ID, "id_correspondence_type")
+        for item in content.find_elements(By.TAG_NAME, 'option'):
+            value = item.get_attribute("value")
+            if value != "None":
+                self.cr_list.append(value)
+        print("cr types list built" + "\n" + str(self.cr_list))
+
+    def status_evaluate(self):
+        for cr in self.cr_list:
+            cr_xpath = "//option[@value='%s']" % cr
+            self.driver.find_element(By.XPATH, cr_xpath).click()
+            for status in self.status_list:
+                print("Status and CR type being tested is: " + status + ", " + cr)
+                status_xpath = "//option[@value='%s']" % status
+                self.driver.find_element(By.XPATH, status_xpath).click()
+                self.driver.find_element(By.XPATH, "//button[@name='_get']").click()
+                self.driver.implicitly_wait(3)
+                row_xpath = "//table[@class='table table-striped table-responsive']/tbody/tr"
+                row_start = self.driver.find_element(By.TAG_NAME, 'tr[-1]')
+                row_count = []
+                row_count = len(rows)
+                print(row_count)
+                # self.status_value_build()
+                # print(self.status_value_list)
+                # print('Total records: ' )
+                print(status + " / " + cr + " have been searched\n")
+
+    def status_value_build(self):
+        table = self.driver.find_element(By.XPATH, "//*[@id='change-notice-form']/div[5]/table")
+
+        header_row = table.find_elements(By.TAG_NAME, "tr")[0]
+        header_columns = header_row.find_elements(By.TAG_NAME, 'th')
+        header_index = -1
+
+        for idx, header in enumerate(header_columns):
+            if header.text.strip() == self.column_status:
+                header_index = idx
+                break
+
+        if header_index == -1:
+            print(f"Header{self.column_status} not found in the table")
+        else:
+            data_rows = table.find_elements(By.TAG_NAME, "tr")[1:]
+            columns_data = []
+            for row in data_rows:
+                columns = row.find_elements(By.TAG_NAME, 'td')
+                header_column = columns[header_index].text
+                columns_data.append(header_column)
+            for column_data in columns_data:
+                self.status_value_list.append(column_data)
+        # print(self.status_value_list)
+
+    def cr_value_build(self):
+        table = self.driver.find_element(By.XPATH, "//*[@id='change-notice-form']/div[5]/table")
+
+        header_row = table.find_elements(By.TAG_NAME, "tr")[0]
+        header_columns = header_row.find_elements(By.TAG_NAME, 'th')
+        header_index = -1
+
+        for idx, header in enumerate(header_columns):
+            if header.text.strip() == self.column_cr:
+                header_index = idx
+                break
+
+        if header_index == -1:
+            print(f"Header{self.column_cr} not found in the table")
+        else:
+            data_rows = table.find_elements(By.TAG_NAME, "tr")[1:]
+            columns_data = []
+            for row in data_rows:
+                columns = row.find_elements(By.TAG_NAME, 'td')
+                header_column = columns[header_index].text
+                columns_data.append(header_column)
+            for column_data in columns_data:
+                self.cr_value_list.append(column_data)
+        # print(self.cr_value_list)
+
+    def conn_end(self):
+        self.driver.close()
+
+
+auto_run = ColumnExam()
+auto_run.column_exam_run()
