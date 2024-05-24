@@ -1,0 +1,44 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.service import Service
+# from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+# everything above sets available tools from the selenium suite
+
+# below is the testing code
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver.get('PT Link')  # lines 7-8 update Chrome drivers to open CCC tab
+
+zkUsername = driver.find_element(By.ID, "id_username")
+zkUsername.send_keys("")
+zkPassword = driver.find_element(By.ID, "id_password")
+zkPassword.send_keys("")
+driver.find_element(By.XPATH, "//input[@type='submit']").click()
+# block 10-14 logs into zookeeper using personal information
+
+jobrun = driver.find_element(By.XPATH, "//a[contains(@href, 'jobrun/add/')]")
+jobrun.click()
+brand = Select(driver.find_element(By.ID, "id_job"))
+brand.select_by_value("124")
+driver.find_element(By.XPATH, "//input[@value='Save']").click()
+# Block 19-23 selects jobrun and will run it for selected brand
+# <option value="98">RDI Job for Brand: nrg</option>
+# <option value="99">RDI Job for Brand: cirro</option>
+# <option value="101">RDI Job for Brand: gme</option>
+# <option value="104">RDI Job for Brand: stream</option>
+# <option value="124">RDI Job for Brand: eph</option>
+
+trackingRun = driver.find_element(By.XPATH, "//a[contains(@href, 'crtrackingrun/add/')]")
+# Loop to rerun this job until all have been processed
+trackingRun.click()
+run = Select(driver.find_element(By.ID, "id_cr_tracking_job"))
+run.select_by_value("1")
+driver.find_element(By.XPATH, "//input[@value='Save']").click()
+# Block 31-35 opens cr tracking runs and selects the tracking job desired
+# <option value="1">sap change notice job</option>
+# <option value="2">exact target bounce job</option>
+# <option value="3">resend email bounce as paper job</option>
+# <option value="5">resend email failure as paper job</option>
+# <option value="8">change notice error tracking job</option>
