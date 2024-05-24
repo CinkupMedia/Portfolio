@@ -1,0 +1,48 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import subprocess
+import time
+# everything above sets available tools from the selenium suite
+
+# below is the testing code
+# Below is code to upload RDI to FileZilla (still unprepared)
+
+# openFZ = subprocess.Popen("C:\\Program Files\\FileZilla FTP Client\\filezilla.exe")
+# time.sleep(5)
+
+# below is the code which processes the uploaded RDI File
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+driver.get('QA Link')  # lines 7-8 update Chrome drivers to open CCC tab
+driver.implicitly_wait(3)
+driver.find_element(By.ID, "id_username").send_keys("")
+driver.find_element(By.ID, "id_password").send_keys("")
+driver.find_element(By.XPATH, "//input[@type='submit']").click()
+# block 10-14 logs into zookeeper using personal information
+
+jobrun = driver.find_element(By.XPATH, "//a[contains(@href, 'jobrun/add/')]")
+jobrun.click()
+brand = Select(driver.find_element(By.ID, "id_job"))
+brand.select_by_value("84")
+driver.find_element(By.XPATH, "//input[@value='Save']").click()
+"""selects jobrun and will run it for selected brand
+<option value="81">RDI Job for Brand: nrg</option>
+<option value="83">RDI Job for Brand: cirro</option>
+<option value="84">RDI Job for Brand: gme</option>
+<option value="85">RDI Job for Brand: stream</option>
+<option value="114">RDI Job for Brand: eph</option>"""
+
+trackingRun = driver.find_element(By.XPATH, "//a[contains(@href, 'crtrackingrun/add/')]")
+# Loop to rerun this job until all records processed
+trackingRun.click()
+run = Select(driver.find_element(By.ID, "id_cr_tracking_job"))
+run.select_by_value("1")
+driver.find_element(By.XPATH, "//input[@value='Save']").click()
+"""opens cr tracking runs and selects the tracking job desired
+<option value="1">sap change notice job</option>
+<option value="2">exact target bounce job</option>
+<option value="3">resend email bounce as paper job</option>
+<option value="5">resend email failure as paper job</option>
+<option value="8">change notice error tracking job</option>"""
