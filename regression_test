@@ -1,3 +1,6 @@
+"""This is code from my last few weeks at the office. The purpose of this script was to simplify a prevouisly written end-to-end sprint review script.
+I was unable to complete this code before my termination date"""
+
 from selenium import webdriver
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
